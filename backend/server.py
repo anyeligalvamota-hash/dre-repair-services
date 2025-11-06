@@ -388,6 +388,67 @@ async def get_me(current_user: User = Depends(get_current_user)):
 
 # ==================== REQUISICION ENDPOINTS ====================
 
+@api_router.post("/requisiciones/public", response_model=Requisicion)
+async def create_requisicion_public(req_data: RequisicionCreate):
+    """Crear requisición sin autenticación (visitantes)"""
+    solicitante = req_data.requerido_por or "Visitante"
+    solicitante_id = None
+    
+    requisicion = Requisicion(
+        tipo=req_data.tipo,
+        solicitante=solicitante,
+        solicitante_id=solicitante_id,
+        departamento=req_data.departamento,
+        prioridad=req_data.prioridad,
+        fecha_requerida=datetime.fromisoformat(req_data.fecha_requerida) if req_data.fecha_requerida else None,
+        material_descripcion=req_data.material_descripcion,
+        cantidad=req_data.cantidad,
+        unidad_medida=req_data.unidad_medida,
+        comentarios=req_data.comentarios,
+        requerido_por=req_data.requerido_por,
+        area=req_data.area,
+        proyecto=req_data.proyecto,
+        proceso=req_data.proceso,
+        main_part=req_data.main_part,
+        part_number=req_data.part_number,
+        modelo=req_data.modelo,
+        descripcion=req_data.descripcion,
+        color=req_data.color,
+        cantidad_solicitada=req_data.cantidad_solicitada,
+        calidad_solicitada=req_data.calidad_solicitada,
+        referencia=req_data.referencia,
+        supervisor_aprobador=req_data.supervisor_aprobador,
+        recibido_por=req_data.recibido_por,
+        autorizacion_ehs=req_data.autorizacion_ehs,
+        proveedor_sugerido=req_data.proveedor_sugerido
+    )
+    
+    req_dict = requisicion.model_dump()
+    req_dict['fecha'] = req_dict['fecha'].isoformat()
+    req_dict['created_at'] = req_dict['created_at'].isoformat()
+    req_dict['updated_at'] = req_dict['updated_at'].isoformat()
+    if req_dict['fecha_requerida']:
+        req_dict['fecha_requerida'] = req_dict['fecha_requerida'].isoformat()
+    
+    await db.requisiciones.insert_one(req_dict)
+    
+    # Enviar correo de confirmación al email de compras
+    email_html = f"""
+    <h2>Nueva Requisición Pública - DRE Repair Services</h2>
+    <p>Se ha creado una nueva requisición desde el portal público.</p>
+    <p><strong>Número de solicitud:</strong> {requisicion.numero_solicitud}</p>
+    <p><strong>Tipo:</strong> {requisicion.tipo}</p>
+    <p><strong>Solicitante:</strong> {solicitante}</p>
+    <p><strong>Departamento:</strong> {requisicion.departamento}</p>
+    <p><strong>Estado:</strong> Pendiente de cotizaciones</p>
+    """
+    
+    await send_email_notification("compras-drerepairservices@hotmail.com", 
+                                 f"Nueva Requisición {requisicion.numero_solicitud}", 
+                                 email_html)
+    
+    return requisicion
+
 @api_router.post("/requisiciones", response_model=Requisicion)
 async def create_requisicion(req_data: RequisicionCreate, current_user: User = Depends(get_current_user)):
     # Usuario autenticado
