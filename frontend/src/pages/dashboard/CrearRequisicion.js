@@ -137,15 +137,30 @@ function CrearRequisicion() {
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="supervisor_aprobador">Supervisor/Gerente Aprobador *</Label>
-                  <Input
-                    id="supervisor_aprobador"
-                    data-testid="supervisor-input"
-                    value={formData.supervisor_aprobador}
-                    onChange={(e) => handleChange('supervisor_aprobador', e.target.value)}
-                    required
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="supervisor_aprobador">Nombre Supervisor/Gerente *</Label>
+                    <Input
+                      id="supervisor_aprobador"
+                      data-testid="supervisor-input"
+                      placeholder="Ej: Carlos Pérez"
+                      value={formData.supervisor_aprobador}
+                      onChange={(e) => handleChange('supervisor_aprobador', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="supervisor_email">Email Supervisor/Gerente *</Label>
+                    <Input
+                      id="supervisor_email"
+                      type="email"
+                      data-testid="supervisor-email-input"
+                      placeholder="supervisor@dre.com"
+                      value={formData.supervisor_email}
+                      onChange={(e) => handleChange('supervisor_email', e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
               </div>
 
