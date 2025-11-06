@@ -26,6 +26,7 @@ function CrearRequisicion() {
     unidad_medida: '',
     comentarios: '',
     supervisor_aprobador: '',
+    supervisor_email: '',
     proveedor_sugerido: '',
     recibido_por: '',
     autorizacion_ehs: '',
