@@ -29,10 +29,10 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # Resend API key
-resend.api_key = 're_D4dhqSSv_7tC88v9QM2Lcm28UpP56z8YP'
+resend.api_key = os.environ.get('RESEND_API_KEY')
 
 # JWT settings
-SECRET_KEY = os.environ.get('JWT_SECRET', 'dre-repair-services-secret-key-2024')
+SECRET_KEY = os.environ['JWT_SECRET']
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 43200  # 30 days
 
