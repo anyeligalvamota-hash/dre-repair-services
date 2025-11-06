@@ -26,6 +26,8 @@ function PublicConsulta() {
   const [tipoRequisicion, setTipoRequisicion] = useState('compra');
   const [formData, setFormData] = useState({
     requerido_por: '',
+    email_solicitante: '',
+    telefono: '',
     departamento: '',
     prioridad: 'Normal',
     fecha_requerida: '',
