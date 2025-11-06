@@ -88,6 +88,8 @@ function PublicConsulta() {
       // Reset form
       setFormData({
         requerido_por: '',
+        email_solicitante: '',
+        telefono: '',
         departamento: '',
         prioridad: 'Normal',
         fecha_requerida: '',
