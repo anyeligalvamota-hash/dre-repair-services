@@ -776,24 +776,48 @@ async def enviar_a_aprobacion(requisicion_id: str, current_user: User = Depends(
         """
     
     email_html = f"""
-    <div style="font-family: Arial, sans-serif;">
-        <h2 style="color: #009E60;">Requisición Lista para Aprobación - DRE Repair Services</h2>
-        <p>La requisición <strong>{req['numero_solicitud']}</strong> tiene {count} cotizaciones cargadas y está lista para su aprobación.</p>
+    <div style="font-family: Arial, sans-serif; max-width: 800px;">
+        <h2 style="color: #009E60;">Solicitud de Aprobación - DRE Repair Services</h2>
+        <p>Estimado/a <strong>{req['supervisor_aprobador']}</strong>,</p>
+        <p>La requisición <strong>{req['numero_solicitud']}</strong> tiene {count} cotizaciones cargadas y requiere su aprobación.</p>
+        
+        <div style="background-color: #FFF3CD; padding: 15px; border-left: 4px solid #FFC107; margin: 20px 0;">
+            <p style="margin: 0; font-weight: bold;">⚠️ Acción Requerida</p>
+            <p style="margin: 5px 0 0 0;">Por favor, revise las cotizaciones a continuación y seleccione la opción que procede para su aprobación.</p>
+        </div>
         
         <h3>Detalles de la Requisición:</h3>
-        <p><strong>Tipo:</strong> {req['tipo']}</p>
-        <p><strong>Departamento:</strong> {req['departamento']}</p>
-        <p><strong>Solicitante:</strong> {req['solicitante']}</p>
-        <p><strong>Descripción:</strong> {req.get('material_descripcion', req.get('descripcion', 'N/A'))}</p>
+        <table style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Número:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{req['numero_solicitud']}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Tipo:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{req['tipo']}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Departamento:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{req['departamento']}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Solicitante:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{req['solicitante']}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Descripción:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{req.get('material_descripcion', req.get('descripcion', 'N/A'))}</td></tr>
+        </table>
         
-        <h3>Cotizaciones:</h3>
+        <h3>Cotizaciones Recibidas (Ordenadas por precio):</h3>
+        <p style="color: #666; font-size: 14px; margin-bottom: 10px;">Las cotizaciones están ordenadas de menor a mayor precio. La opción más económica está resaltada en verde.</p>
         {cotizaciones_html}
         
-        <p style="margin-top: 20px;">
-            <a href="{os.environ.get('FRONTEND_URL', os.environ.get('REACT_APP_BACKEND_URL', ''))}" 
-               style="background-color: #009E60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-               Ver Solicitud en el Sistema
+        <div style="background-color: #E8F5E9; padding: 15px; border-left: 4px solid #009E60; margin: 20px 0;">
+            <p style="margin: 0; font-weight: bold;">📋 Instrucciones:</p>
+            <ol style="margin: 10px 0 0 0; padding-left: 20px;">
+                <li>Revise cada cotización cuidadosamente</li>
+                <li>Considere precio, proveedor y términos</li>
+                <li>Ingrese al sistema para aprobar la cotización seleccionada</li>
+                <li>Si ninguna cotización es adecuada, puede rechazar con comentarios</li>
+            </ol>
+        </div>
+        
+        <p style="margin-top: 30px; text-align: center;">
+            <a href="{os.environ.get('FRONTEND_URL', '')}/dashboard/cotizaciones" 
+               style="background-color: #009E60; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold;">
+               Revisar y Aprobar en el Sistema
             </a>
+        </p>
+        
+        <p style="margin-top: 20px; color: #666; font-size: 12px; text-align: center;">
+            Este correo requiere su atención. Por favor, procese esta solicitud a la brevedad posible.
         </p>
     </div>
     """
