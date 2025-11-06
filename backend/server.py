@@ -312,7 +312,7 @@ def calculate_pd_fields(pd_data: Dict) -> Dict:
 async def send_email_notification(to_email: str, subject: str, html_content: str):
     """Envía notificación por correo usando Resend"""
     try:
-        resend_client.emails.send({
+        resend.Emails.send({
             "from": "onboarding@resend.dev",
             "to": to_email,
             "subject": subject,
