@@ -198,7 +198,90 @@ function AdminPanel() {
       {/* Users List */}
       <Card>
         <CardHeader>
-          <CardTitle>Usuarios del Sistema</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Usuarios del Sistema</CardTitle>
+            <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+              <DialogTrigger asChild>
+                <Button
+                  style={{ backgroundColor: '#009E60' }}
+                  data-testid="create-user-button"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Crear Usuario
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Crear Nuevo Usuario</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleCreateUser} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="nombre">Nombre Completo *</Label>
+                    <Input
+                      id="nombre"
+                      value={newUser.nombre}
+                      onChange={(e) => setNewUser({...newUser, nombre: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={newUser.email}
+                      onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Contraseña *</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={newUser.password}
+                      onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="departamento">Departamento</Label>
+                    <Input
+                      id="departamento"
+                      value={newUser.departamento}
+                      onChange={(e) => setNewUser({...newUser, departamento: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Roles *</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {Object.keys(newUser.roles).filter(r => r !== 'visitante').map((role) => (
+                        <div key={role} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={role}
+                            checked={newUser.roles[role]}
+                            onCheckedChange={(checked) => handleRoleChange(role, checked)}
+                          />
+                          <Label htmlFor={role} className="capitalize text-sm cursor-pointer">
+                            {role}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    style={{ backgroundColor: '#009E60' }}
+                    disabled={loading}
+                  >
+                    {loading ? 'Creando...' : 'Crear Usuario'}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
