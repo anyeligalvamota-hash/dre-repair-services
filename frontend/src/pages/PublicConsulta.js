@@ -344,12 +344,26 @@ function PublicConsulta() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="supervisor_aprobador">Supervisor/Gerente Aprobador *</Label>
+                      <Label htmlFor="supervisor_aprobador">Nombre Supervisor/Gerente Aprobador *</Label>
                       <Input
                         id="supervisor_aprobador"
                         data-testid="supervisor-input"
+                        placeholder="Ej: Carlos Pérez"
                         value={formData.supervisor_aprobador}
                         onChange={(e) => handleChange('supervisor_aprobador', e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="supervisor_email">Email Supervisor/Gerente Aprobador *</Label>
+                      <Input
+                        id="supervisor_email"
+                        type="email"
+                        data-testid="supervisor-email-input"
+                        placeholder="supervisor@empresa.com"
+                        value={formData.supervisor_email}
+                        onChange={(e) => handleChange('supervisor_email', e.target.value)}
                         required
                       />
                     </div>
