@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 import bcrypt
 import jwt
-from resend import Resend
+import resend
 import aiofiles
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill
@@ -28,8 +28,8 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Resend client
-resend_client = Resend(api_key='re_D4dhqSSv_7tC88v9QM2Lcm28UpP56z8YP')
+# Resend API key
+resend.api_key = 're_D4dhqSSv_7tC88v9QM2Lcm28UpP56z8YP'
 
 # JWT settings
 SECRET_KEY = os.environ.get('JWT_SECRET', 'dre-repair-services-secret-key-2024')
