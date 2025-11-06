@@ -389,7 +389,7 @@ async def get_me(current_user: User = Depends(get_current_user)):
 # ==================== REQUISICION ENDPOINTS ====================
 
 @api_router.post("/requisiciones", response_model=Requisicion)
-async def create_requisicion(req_data: RequisicionCreate, current_user: Optional[User] = None):
+async def create_requisicion(req_data: RequisicionCreate, current_user: Optional[User] = Depends(lambda: None)):
     # Permitir creación sin autenticación (visitante)
     solicitante = current_user.nombre if current_user else req_data.requerido_por or "Visitante"
     solicitante_id = current_user.id if current_user else None
