@@ -87,6 +87,50 @@ function AdminPanel() {
     }
   };
 
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      await axios.post(`${API}/auth/register`, newUser, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Usuario creado exitosamente');
+      setOpenDialog(false);
+      setNewUser({
+        email: '',
+        password: '',
+        nombre: '',
+        departamento: '',
+        roles: {
+          colaborador: false,
+          supervisor: false,
+          gerente: false,
+          director: false,
+          ceo: false,
+          compras: false,
+          admin: false
+        }
+      });
+      fetchUsers();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Error al crear usuario');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRoleChange = (role, checked) => {
+    setNewUser(prev => ({
+      ...prev,
+      roles: {
+        ...prev.roles,
+        [role]: checked
+      }
+    }));
+  };
+
   const getRolesBadges = (roles) => {
     const activeRoles = Object.entries(roles)
       .filter(([_, value]) => value)
