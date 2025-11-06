@@ -113,6 +113,7 @@ class Requisicion(BaseModel):
     # Campos de aprobación
     supervisor_aprobador: str
     supervisor_aprobador_id: Optional[str] = None
+    supervisor_email: Optional[str] = None  # Email del supervisor
     recibido_por: Optional[str] = None
     aprobado_por: Optional[str] = None
     autorizacion_ehs: Optional[str] = None
