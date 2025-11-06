@@ -1145,6 +1145,115 @@ async def delete_user(user_id: str, current_user: User = Depends(get_current_use
     await db.users.delete_one({"id": user_id})
     return {"message": "Usuario eliminado"}
 
+@api_router.get("/admin/stats")
+async def get_admin_stats(current_user: User = Depends(get_current_user)):
+    """Obtiene estadísticas completas del sistema"""
+    if not current_user.roles.admin:
+        raise HTTPException(status_code=403, detail="Solo administradores pueden ver estadísticas")
+    
+    # Contar requisiciones por estado
+    requisiciones = await db.requisiciones.find({}, {"_id": 0, "estado": 1, "tipo": 1, "solicitante_id": 1}).to_list(10000)
+    
+    estados_count = {}
+    for req in requisiciones:
+        estado = req.get('estado', 'pendiente')
+        estados_count[estado] = estados_count.get(estado, 0) + 1
+    
+    # Contar requisiciones públicas vs internas
+    publicas = len([r for r in requisiciones if r.get('solicitante_id') is None])
+    internas = len([r for r in requisiciones if r.get('solicitante_id') is not None])
+    
+    # Contar por tipo
+    tipos_count = {}
+    for req in requisiciones:
+        tipo = req.get('tipo', 'compra')
+        tipos_count[tipo] = tipos_count.get(tipo, 0) + 1
+    
+    # Contar cotizaciones
+    total_cotizaciones = await db.cotizaciones.count_documents({})
+    cotizaciones_aprobadas = await db.cotizaciones.count_documents({"aprobada": True})
+    cotizaciones_rechazadas = await db.cotizaciones.count_documents({"rechazada": True})
+    
+    # Contar Purchase Documents
+    total_pds = await db.purchase_documents.count_documents({})
+    pds_por_estado = await db.purchase_documents.aggregate([
+        {"$group": {"_id": "$order_status", "count": {"$sum": 1}}}
+    ]).to_list(100)
+    
+    pds_estados = {pd['_id']: pd['count'] for pd in pds_por_estado}
+    
+    # Contar usuarios
+    total_users = await db.users.count_documents({})
+    
+    return {
+        "requisiciones": {
+            "total": len(requisiciones),
+            "publicas": publicas,
+            "internas": internas,
+            "por_estado": estados_count,
+            "por_tipo": tipos_count
+        },
+        "cotizaciones": {
+            "total": total_cotizaciones,
+            "aprobadas": cotizaciones_aprobadas,
+            "rechazadas": cotizaciones_rechazadas,
+            "pendientes": total_cotizaciones - cotizaciones_aprobadas - cotizaciones_rechazadas
+        },
+        "purchase_documents": {
+            "total": total_pds,
+            "por_estado": pds_estados
+        },
+        "usuarios": {
+            "total": total_users
+        }
+    }
+
+@api_router.get("/admin/requisicion-details/{requisicion_id}")
+async def get_requisicion_full_details(requisicion_id: str, current_user: User = Depends(get_current_user)):
+    """Obtiene todos los detalles de una requisición con cotizaciones y PD enlazados"""
+    if not (current_user.roles.admin or current_user.roles.compras):
+        raise HTTPException(status_code=403, detail="No tiene permisos")
+    
+    # Obtener requisición
+    req = await db.requisiciones.find_one({"id": requisicion_id}, {"_id": 0})
+    if not req:
+        raise HTTPException(status_code=404, detail="Requisición no encontrada")
+    
+    # Convertir fechas
+    if isinstance(req.get('fecha'), str):
+        req['fecha'] = datetime.fromisoformat(req['fecha'])
+    if req.get('fecha_requerida') and isinstance(req['fecha_requerida'], str):
+        req['fecha_requerida'] = datetime.fromisoformat(req['fecha_requerida'])
+    if isinstance(req.get('created_at'), str):
+        req['created_at'] = datetime.fromisoformat(req['created_at'])
+    if isinstance(req.get('updated_at'), str):
+        req['updated_at'] = datetime.fromisoformat(req['updated_at'])
+    
+    # Obtener cotizaciones relacionadas
+    cotizaciones = await db.cotizaciones.find({"requisicion_id": requisicion_id}, {"_id": 0}).to_list(100)
+    for cot in cotizaciones:
+        if isinstance(cot.get('fecha_carga'), str):
+            cot['fecha_carga'] = datetime.fromisoformat(cot['fecha_carga'])
+    
+    # Obtener PD relacionado (si existe)
+    pd = None
+    if req.get('estado') == 'aprobado':
+        pd = await db.purchase_documents.find_one({"requisicion_id": requisicion_id}, {"_id": 0})
+        if pd:
+            if isinstance(pd.get('po_date'), str):
+                pd['po_date'] = datetime.fromisoformat(pd['po_date'])
+            if isinstance(pd.get('created_at'), str):
+                pd['created_at'] = datetime.fromisoformat(pd['created_at'])
+            if isinstance(pd.get('updated_at'), str):
+                pd['updated_at'] = datetime.fromisoformat(pd['updated_at'])
+    
+    return {
+        "requisicion": req,
+        "cotizaciones": cotizaciones,
+        "purchase_document": pd,
+        "has_pd": pd is not None
+    }
+
 @api_router.get("/export/requisiciones")
 async def export_requisiciones(current_user: User = Depends(get_current_user)):
     """Exporta requisiciones a Excel"""
