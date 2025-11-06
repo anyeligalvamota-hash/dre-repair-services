@@ -736,15 +736,42 @@ async def enviar_a_aprobacion(requisicion_id: str, current_user: User = Depends(
     # Usar el email del supervisor guardado en la requisición, o el email por defecto
     supervisor_email = req.get('supervisor_email') or os.environ.get('SUPERVISOR_EMAIL', 'compras-drerepairservices@hotmail.com')
     
+    # Ordenar cotizaciones por monto (menor a mayor)
+    cotizaciones_ordenadas = sorted(cotizaciones, key=lambda x: x['monto_usd'])
+    
     cotizaciones_html = ""
-    for i, cot in enumerate(cotizaciones, 1):
+    for i, cot in enumerate(cotizaciones_ordenadas, 1):
+        # Resaltar la cotización más económica
+        is_cheapest = i == 1
+        border_color = "#009E60" if is_cheapest else "#ddd"
+        bg_color = "#E8F5E9" if is_cheapest else "#ffffff"
+        
         cotizaciones_html += f"""
-        <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-            <h4>Cotización {i} - {cot['proveedor']}</h4>
-            <p><strong>Número:</strong> {cot['numero_cotizacion']}</p>
-            <p><strong>Monto RD$:</strong> ${cot['monto_rdp']:,.2f}</p>
-            <p><strong>Monto US$:</strong> ${cot['monto_usd']:,.2f}</p>
-            <p><strong>Descripción:</strong> {cot['descripcion']}</p>
+        <div style="margin: 15px 0; padding: 15px; border: 2px solid {border_color}; border-radius: 8px; background-color: {bg_color};">
+            <h4 style="color: {border_color}; margin: 0 0 10px 0;">Cotización {i} - {cot['proveedor']}</h4>
+            {f'<p style="color: #009E60; font-weight: bold; margin: 0 0 10px 0;">✓ Opción Más Económica</p>' if is_cheapest else ''}
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 5px;"><strong>Número de Cotización:</strong></td>
+                    <td style="padding: 5px;">{cot['numero_cotizacion']}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px;"><strong>Proveedor:</strong></td>
+                    <td style="padding: 5px;">{cot['proveedor']}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px;"><strong>Monto RD$:</strong></td>
+                    <td style="padding: 5px; font-size: 18px; font-weight: bold;">${cot['monto_rdp']:,.2f}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px;"><strong>Monto US$:</strong></td>
+                    <td style="padding: 5px; font-size: 18px; font-weight: bold;">${cot['monto_usd']:,.2f}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px;"><strong>Descripción:</strong></td>
+                    <td style="padding: 5px;">{cot['descripcion']}</td>
+                </tr>
+            </table>
         </div>
         """
     
