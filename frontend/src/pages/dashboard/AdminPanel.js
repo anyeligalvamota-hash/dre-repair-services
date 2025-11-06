@@ -4,7 +4,11 @@ import { AuthContext } from '../../App';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import { Download, Users, FileText } from 'lucide-react';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Checkbox } from '../../components/ui/checkbox';
+import { Download, Users, FileText, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 function AdminPanel() {
