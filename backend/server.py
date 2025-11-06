@@ -733,8 +733,8 @@ async def enviar_a_aprobacion(requisicion_id: str, current_user: User = Depends(
         {"$set": {"estado": "enviado_aprobacion"}}
     )
     
-    # Enviar correo al supervisor
-    supervisor_email = os.environ.get('SUPERVISOR_EMAIL', 'compras-drerepairservices@hotmail.com')
+    # Usar el email del supervisor guardado en la requisición, o el email por defecto
+    supervisor_email = req.get('supervisor_email') or os.environ.get('SUPERVISOR_EMAIL', 'compras-drerepairservices@hotmail.com')
     
     cotizaciones_html = ""
     for i, cot in enumerate(cotizaciones, 1):
