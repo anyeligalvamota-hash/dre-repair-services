@@ -302,6 +302,21 @@ function PublicConsulta() {
                         />
                       </div>
                       <div className="space-y-2">
+                        <Label htmlFor="email_solicitante">Correo Electrónico *</Label>
+                        <Input
+                          id="email_solicitante"
+                          type="email"
+                          data-testid="email-solicitante-input"
+                          placeholder="correo@ejemplo.com"
+                          value={formData.email_solicitante}
+                          onChange={(e) => handleChange('email_solicitante', e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
                         <Label htmlFor="departamento">Departamento *</Label>
                         <Input
                           id="departamento"
@@ -309,6 +324,17 @@ function PublicConsulta() {
                           value={formData.departamento}
                           onChange={(e) => handleChange('departamento', e.target.value)}
                           required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="telefono">Teléfono (Opcional)</Label>
+                        <Input
+                          id="telefono"
+                          type="tel"
+                          data-testid="telefono-input"
+                          placeholder="(809) 123-4567"
+                          value={formData.telefono}
+                          onChange={(e) => handleChange('telefono', e.target.value)}
                         />
                       </div>
                     </div>
