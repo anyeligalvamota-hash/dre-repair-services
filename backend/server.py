@@ -862,11 +862,42 @@ async def update_pd(pd_id: str, updates: Dict[str, Any], current_user: User = De
     if not pd:
         raise HTTPException(status_code=404, detail="PD no encontrado")
     
+    old_status = pd.get('order_status', '')
     pd.update(updates)
     pd = calculate_pd_fields(pd)
     pd['updated_at'] = datetime.now(timezone.utc).isoformat()
     
     await db.purchase_documents.update_one({"id": pd_id}, {"$set": pd})
+    
+    # Enviar notificación si cambió el estado
+    new_status = pd.get('order_status', '')
+    if old_status != new_status:
+        email_html = f"""
+        <div style="font-family: Arial, sans-serif;">
+            <h2 style="color: #009E60;">Actualización de Purchase Document - DRE Repair Services</h2>
+            <p>El estado de un Purchase Document ha sido actualizado.</p>
+            
+            <table style="border-collapse: collapse; width: 100%;">
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>PD ID:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{pd['id']}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Supplier:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{pd['supplier']}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>PO:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{pd['po']}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Estado Anterior:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{old_status}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Estado Nuevo:</strong></td><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #009E60;">{new_status}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>QTY Pending:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{pd.get('qty_pending', 0)}</td></tr>
+            </table>
+            
+            <p style="margin-top: 20px;">
+                <a href="{os.environ.get('FRONTEND_URL', '')}/dashboard/purchase-documents" 
+                   style="background-color: #009E60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                   Ver Purchase Document
+                </a>
+            </p>
+        </div>
+        """
+        
+        notification_email = os.environ.get('NOTIFICATION_EMAIL', 'compras-drerepairservices@hotmail.com')
+        await send_email_notification(notification_email, f"Actualización PD - {pd['id']}", email_html)
+    
     return {"message": "PD actualizado"}
 
 @api_router.delete("/purchase-documents/{pd_id}")
