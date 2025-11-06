@@ -804,6 +804,47 @@ async def rechazar_cotizacion(cotizacion_id: str, comentario: str = Body(...), c
         {"$set": {"estado": "rechazado", "comentario_rechazo": comentario}}
     )
     
+    # Obtener requisición
+    req = await db.requisiciones.find_one({"id": cot['requisicion_id']})
+    
+    # Enviar notificación de rechazo
+    email_html = f"""
+    <div style="font-family: Arial, sans-serif;">
+        <h2 style="color: #EF4444;">Cotización Rechazada - DRE Repair Services</h2>
+        <p>Una cotización ha sido rechazada.</p>
+        
+        <h3>Detalles de la Requisición:</h3>
+        <table style="border-collapse: collapse; width: 100%;">
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Número:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{req.get('numero_solicitud', 'N/A') if req else 'N/A'}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Tipo:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{req.get('tipo', 'N/A') if req else 'N/A'}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Departamento:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{req.get('departamento', 'N/A') if req else 'N/A'}</td></tr>
+        </table>
+        
+        <h3>Cotización Rechazada:</h3>
+        <table style="border-collapse: collapse; width: 100%;">
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Proveedor:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{cot['proveedor']}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Número de Cotización:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{cot['numero_cotizacion']}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Rechazado por:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{current_user.nombre}</td></tr>
+        </table>
+        
+        <div style="margin-top: 20px; padding: 12px; background-color: #FEE2E2; border-left: 4px solid #EF4444; border-radius: 4px;">
+            <strong>Motivo del rechazo:</strong><br>
+            {comentario}
+        </div>
+        
+        <p style="margin-top: 20px;">
+            <a href="{os.environ.get('FRONTEND_URL', '')}/dashboard/cotizaciones" 
+               style="background-color: #009E60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+               Ver en el Sistema
+            </a>
+        </p>
+    </div>
+    """
+    
+    # Notificar a compras
+    notification_email = os.environ.get('NOTIFICATION_EMAIL', 'compras-drerepairservices@hotmail.com')
+    await send_email_notification(notification_email, f"Cotización Rechazada - {req.get('numero_solicitud', 'N/A') if req else 'N/A'}", email_html)
+    
     return {"message": "Cotización rechazada"}
 
 # ==================== PURCHASE DOCUMENT ENDPOINTS ====================
