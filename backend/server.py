@@ -788,6 +788,41 @@ async def create_pd(pd_data: PDCreate, current_user: User = Depends(get_current_
     
     await db.purchase_documents.insert_one(pd_save)
     
+    # Enviar notificación por email
+    req = await db.requisiciones.find_one({"id": pd_data.requisicion_id})
+    
+    email_html = f"""
+    <div style="font-family: Arial, sans-serif;">
+        <h2 style="color: #009E60;">Purchase Document Creado - DRE Repair Services</h2>
+        <p>Se ha generado un nuevo Purchase Document.</p>
+        
+        <h3>Información del PD:</h3>
+        <table style="border-collapse: collapse; width: 100%;">
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>ID:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{pd.id}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Requisición:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{req.get('numero_solicitud', 'N/A') if req else 'N/A'}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Supplier:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{pd.supplier}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>PO:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{pd.po}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Department:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{pd.department}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Description:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{pd.description}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>QTY:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{pd.qty}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Net Price RD$:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${pd.net_price_rdp:,.2f}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Net Price US$:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${pd.net_price_usd:,.2f}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Order Status:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{pd.order_status}</td></tr>
+        </table>
+        
+        <p style="margin-top: 20px;">
+            <a href="{os.environ.get('FRONTEND_URL', '')}/dashboard/purchase-documents" 
+               style="background-color: #009E60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+               Ver Purchase Document
+            </a>
+        </p>
+    </div>
+    """
+    
+    # Notificar a compras y al usuario que creó
+    notification_email = os.environ.get('NOTIFICATION_EMAIL', 'compras-drerepairservices@hotmail.com')
+    await send_email_notification(notification_email, f"Nuevo PD Creado - {pd.id}", email_html)
+    
     return pd
 
 @api_router.get("/purchase-documents")
