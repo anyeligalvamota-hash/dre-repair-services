@@ -653,7 +653,7 @@ async def enviar_a_aprobacion(requisicion_id: str, current_user: User = Depends(
     )
     
     # Enviar correo al supervisor
-    supervisor_email = "compras-drerepairservices@hotmail.com"  # Email por defecto
+    supervisor_email = os.environ.get('SUPERVISOR_EMAIL', 'compras-drerepairservices@hotmail.com')
     
     cotizaciones_html = ""
     for i, cot in enumerate(cotizaciones, 1):
