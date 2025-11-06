@@ -500,18 +500,32 @@ async def create_requisicion(req_data: RequisicionCreate, current_user: User = D
     
     await db.requisiciones.insert_one(req_dict)
     
-    # Enviar correo de confirmación
+    # Enviar correo de confirmación al usuario
     email_html = f"""
-    <h2>Requisición Creada - DRE Repair Services</h2>
-    <p>Su requisición ha sido creada exitosamente.</p>
-    <p><strong>Número de solicitud:</strong> {requisicion.numero_solicitud}</p>
-    <p><strong>Tipo:</strong> {requisicion.tipo}</p>
-    <p><strong>Estado:</strong> Pendiente de cotizaciones</p>
-    <p>Puede consultar el estado de su requisición usando el número de solicitud.</p>
+    <div style="font-family: Arial, sans-serif;">
+        <h2 style="color: #009E60;">Requisición Creada - DRE Repair Services</h2>
+        <p>Su requisición ha sido creada exitosamente.</p>
+        <p><strong>Número de solicitud:</strong> {requisicion.numero_solicitud}</p>
+        <p><strong>Tipo:</strong> {requisicion.tipo}</p>
+        <p><strong>Departamento:</strong> {requisicion.departamento}</p>
+        <p><strong>Prioridad:</strong> {requisicion.prioridad}</p>
+        <p><strong>Estado:</strong> Pendiente de cotizaciones</p>
+        <p style="margin-top: 20px;">
+            <a href="{os.environ.get('FRONTEND_URL', '')}" 
+               style="background-color: #009E60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+               Ver en el Sistema
+            </a>
+        </p>
+    </div>
     """
     
+    # Enviar al usuario y a compras
     if current_user and current_user.email:
         await send_email_notification(current_user.email, f"Requisición {requisicion.numero_solicitud} Creada", email_html)
+    
+    # Notificar a compras
+    notification_email = os.environ.get('NOTIFICATION_EMAIL', 'compras-drerepairservices@hotmail.com')
+    await send_email_notification(notification_email, f"Nueva Requisición {requisicion.numero_solicitud}", email_html)
     
     return requisicion
 
