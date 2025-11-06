@@ -153,6 +153,7 @@ class RequisicionCreate(BaseModel):
     calidad_solicitada: Optional[str] = None
     referencia: Optional[str] = None
     supervisor_aprobador: str
+    supervisor_email: Optional[str] = None  # Email del supervisor para notificaciones
     recibido_por: Optional[str] = None
     autorizacion_ehs: Optional[str] = None
     proveedor_sugerido: Optional[str] = None
