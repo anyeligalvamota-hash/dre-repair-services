@@ -316,15 +316,26 @@ def calculate_pd_fields(pd_data: Dict) -> Dict:
 async def send_email_notification(to_email: str, subject: str, html_content: str):
     """Envía notificación por correo usando Resend"""
     try:
+        # En modo testing de Resend, solo se puede enviar al email verificado
+        # Cambiar el destinatario al email de testing si es necesario
+        verified_email = os.environ.get('NOTIFICATION_EMAIL', 'compras-drerepairservices@hotmail.com')
+        
+        # Si el email de destino no es el verificado, agregar nota en el subject
+        actual_recipient = to_email
+        if to_email != verified_email:
+            subject = f"{subject} [Para: {to_email}]"
+            actual_recipient = verified_email
+        
         resend.Emails.send({
             "from": "onboarding@resend.dev",
-            "to": to_email,
+            "to": actual_recipient,
             "subject": subject,
             "html": html_content
         })
+        logging.info(f"Email enviado exitosamente a {actual_recipient} (destinatario original: {to_email})")
         return True
     except Exception as e:
-        logging.error(f"Error enviando correo: {str(e)}")
+        logging.error(f"Error enviando correo a {to_email}: {str(e)}")
         return False
 
 async def get_exchange_rate():
