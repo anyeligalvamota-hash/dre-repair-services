@@ -682,7 +682,7 @@ async def enviar_a_aprobacion(requisicion_id: str, current_user: User = Depends(
         {cotizaciones_html}
         
         <p style="margin-top: 20px;">
-            <a href="{os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:3000')}" 
+            <a href="{os.environ.get('FRONTEND_URL', os.environ.get('REACT_APP_BACKEND_URL', ''))}" 
                style="background-color: #009E60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
                Ver Solicitud en el Sistema
             </a>
