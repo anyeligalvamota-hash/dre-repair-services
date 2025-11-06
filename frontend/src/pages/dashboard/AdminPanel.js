@@ -15,9 +15,26 @@ function AdminPanel() {
   const { API, token } = useContext(AuthContext);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [openDialog, setOpenDialog] = useState(false);
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalRequisiciones: 0
+  });
+  
+  const [newUser, setNewUser] = useState({
+    email: '',
+    password: '',
+    nombre: '',
+    departamento: '',
+    roles: {
+      colaborador: false,
+      supervisor: false,
+      gerente: false,
+      director: false,
+      ceo: false,
+      compras: false,
+      admin: false
+    }
   });
 
   useEffect(() => {
