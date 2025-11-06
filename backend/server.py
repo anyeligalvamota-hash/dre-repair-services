@@ -443,7 +443,8 @@ async def create_requisicion_public(req_data: RequisicionCreate):
     <p><strong>Estado:</strong> Pendiente de cotizaciones</p>
     """
     
-    await send_email_notification("compras-drerepairservices@hotmail.com", 
+    notification_email = os.environ.get('NOTIFICATION_EMAIL', 'compras-drerepairservices@hotmail.com')
+    await send_email_notification(notification_email, 
                                  f"Nueva Requisición {requisicion.numero_solicitud}", 
                                  email_html)
     
