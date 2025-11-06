@@ -514,13 +514,13 @@ async def get_requisiciones(current_user: User = Depends(get_current_user)):
     
     # Filtrar según rol
     if current_user.roles.admin or current_user.roles.compras:
-        # Ver todas
-        pass
+        # Ver todas (incluidas las públicas con solicitante_id = None)
+        query = {}
     elif current_user.roles.supervisor or current_user.roles.gerente or current_user.roles.director or current_user.roles.ceo:
         # Ver las que están asignadas para aprobar
         query = {"supervisor_aprobador_id": current_user.id}
     else:
-        # Ver solo las propias
+        # Ver solo las propias (excluye las públicas)
         query = {"solicitante_id": current_user.id}
     
     requisiciones = await db.requisiciones.find(query, {"_id": 0}).to_list(1000)
