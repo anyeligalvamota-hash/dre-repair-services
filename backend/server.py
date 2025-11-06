@@ -139,6 +139,8 @@ class RequisicionCreate(BaseModel):
     unidad_medida: Optional[str] = None
     comentarios: str
     requerido_por: Optional[str] = None
+    email_solicitante: Optional[str] = None  # Email para visitantes públicos
+    telefono: Optional[str] = None
     area: Optional[str] = None
     proyecto: Optional[str] = None
     proceso: Optional[str] = None
