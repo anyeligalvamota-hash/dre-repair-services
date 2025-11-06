@@ -440,20 +440,77 @@ async def create_requisicion_public(req_data: RequisicionCreate):
     
     await db.requisiciones.insert_one(req_dict)
     
-    # Enviar correo de confirmación al email de compras
+    # Enviar correo de confirmación al solicitante público
+    if req_data.email_solicitante:
+        solicitante_email_html = f"""
+        <div style="font-family: Arial, sans-serif;">
+            <h2 style="color: #009E60;">Requisición Creada - DRE Repair Services</h2>
+            <p>Estimado/a {solicitante},</p>
+            <p>Su requisición ha sido recibida y registrada exitosamente en nuestro sistema.</p>
+            
+            <div style="background-color: #E8F5E9; padding: 15px; border-left: 4px solid #009E60; margin: 20px 0;">
+                <p style="margin: 0;"><strong>Número de solicitud:</strong> {requisicion.numero_solicitud}</p>
+                <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Guarde este número para consultar el estado de su requisición</p>
+            </div>
+            
+            <h3>Detalles de su requisición:</h3>
+            <table style="border-collapse: collapse; width: 100%;">
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Tipo:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{requisicion.tipo}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Departamento:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{requisicion.departamento}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Prioridad:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{requisicion.prioridad}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Estado:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">Pendiente de cotizaciones</td></tr>
+            </table>
+            
+            <p style="margin-top: 20px;">Puede consultar el estado de su requisición en cualquier momento ingresando su número de solicitud en nuestra página web.</p>
+            
+            <p style="margin-top: 20px;">
+                <a href="{os.environ.get('FRONTEND_URL', '')}" 
+                   style="background-color: #009E60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                   Consultar Estado
+                </a>
+            </p>
+            
+            <p style="margin-top: 30px; color: #666; font-size: 12px;">Le notificaremos cuando su requisición sea procesada.</p>
+        </div>
+        """
+        await send_email_notification(req_data.email_solicitante, 
+                                     f"Requisición {requisicion.numero_solicitud} Recibida", 
+                                     solicitante_email_html)
+    
+    # Enviar notificación al email de compras
     email_html = f"""
-    <h2>Nueva Requisición Pública - DRE Repair Services</h2>
-    <p>Se ha creado una nueva requisición desde el portal público.</p>
-    <p><strong>Número de solicitud:</strong> {requisicion.numero_solicitud}</p>
-    <p><strong>Tipo:</strong> {requisicion.tipo}</p>
-    <p><strong>Solicitante:</strong> {solicitante}</p>
-    <p><strong>Departamento:</strong> {requisicion.departamento}</p>
-    <p><strong>Estado:</strong> Pendiente de cotizaciones</p>
+    <div style="font-family: Arial, sans-serif;">
+        <h2 style="color: #009E60;">Nueva Requisición Pública - DRE Repair Services</h2>
+        <p>Se ha creado una nueva requisición desde el portal público.</p>
+        
+        <h3>Información del Solicitante:</h3>
+        <table style="border-collapse: collapse; width: 100%;">
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Nombre:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{solicitante}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Email:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{req_data.email_solicitante or 'No proporcionado'}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Teléfono:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{req_data.telefono or 'No proporcionado'}</td></tr>
+        </table>
+        
+        <h3>Detalles de la Requisición:</h3>
+        <table style="border-collapse: collapse; width: 100%;">
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Número de solicitud:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{requisicion.numero_solicitud}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Tipo:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{requisicion.tipo}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Departamento:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{requisicion.departamento}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Prioridad:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{requisicion.prioridad}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Estado:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">Pendiente de cotizaciones</td></tr>
+        </table>
+        
+        <p style="margin-top: 20px;">
+            <a href="{os.environ.get('FRONTEND_URL', '')}/dashboard/requisiciones" 
+               style="background-color: #009E60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+               Ver en el Sistema
+            </a>
+        </p>
+    </div>
     """
     
     notification_email = os.environ.get('NOTIFICATION_EMAIL', 'compras-drerepairservices@hotmail.com')
     await send_email_notification(notification_email, 
-                                 f"Nueva Requisición {requisicion.numero_solicitud}", 
+                                 f"Nueva Requisición Pública {requisicion.numero_solicitud}", 
                                  email_html)
     
     return requisicion
