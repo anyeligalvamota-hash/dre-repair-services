@@ -738,6 +738,48 @@ async def aprobar_cotizacion(cotizacion_id: str, current_user: User = Depends(ge
         {"$set": {"estado": "aprobado", "aprobado_por": current_user.nombre}}
     )
     
+    # Obtener requisición
+    req = await db.requisiciones.find_one({"id": cot['requisicion_id']})
+    
+    # Enviar notificación de aprobación
+    email_html = f"""
+    <div style="font-family: Arial, sans-serif;">
+        <h2 style="color: #009E60;">Cotización Aprobada - DRE Repair Services</h2>
+        <p>Una cotización ha sido aprobada.</p>
+        
+        <h3>Detalles de la Requisición:</h3>
+        <table style="border-collapse: collapse; width: 100%;">
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Número:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{req.get('numero_solicitud', 'N/A') if req else 'N/A'}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Tipo:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{req.get('tipo', 'N/A') if req else 'N/A'}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Departamento:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{req.get('departamento', 'N/A') if req else 'N/A'}</td></tr>
+        </table>
+        
+        <h3>Cotización Aprobada:</h3>
+        <table style="border-collapse: collapse; width: 100%;">
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Proveedor:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{cot['proveedor']}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Número de Cotización:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{cot['numero_cotizacion']}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Monto RD$:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${cot['monto_rdp']:,.2f}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Monto US$:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${cot['monto_usd']:,.2f}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Aprobado por:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{current_user.nombre}</td></tr>
+        </table>
+        
+        <p style="margin-top: 20px; padding: 12px; background-color: #D1FAE5; border-left: 4px solid #009E60; border-radius: 4px;">
+            <strong>Siguiente paso:</strong> El departamento de Compras puede proceder a generar el Purchase Document (PD).
+        </p>
+        
+        <p style="margin-top: 20px;">
+            <a href="{os.environ.get('FRONTEND_URL', '')}/dashboard/cotizaciones" 
+               style="background-color: #009E60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+               Ver en el Sistema
+            </a>
+        </p>
+    </div>
+    """
+    
+    # Notificar a compras
+    notification_email = os.environ.get('NOTIFICATION_EMAIL', 'compras-drerepairservices@hotmail.com')
+    await send_email_notification(notification_email, f"Cotización Aprobada - {req.get('numero_solicitud', 'N/A') if req else 'N/A'}", email_html)
+    
     return {"message": "Cotización aprobada"}
 
 @api_router.post("/cotizaciones/rechazar/{cotizacion_id}")
