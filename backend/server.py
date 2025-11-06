@@ -336,6 +336,12 @@ async def get_exchange_rate():
         # Tasa por defecto si falla la API
         return 58.0
 
+# ==================== HEALTH CHECK ====================
+
+@api_router.get("/")
+async def root():
+    return {"status": "ok", "message": "DRE Repair Services API", "version": "1.0"}
+
 # ==================== AUTH ENDPOINTS ====================
 
 @api_router.post("/auth/register")
