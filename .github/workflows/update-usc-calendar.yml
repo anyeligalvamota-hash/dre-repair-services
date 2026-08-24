@@ -1,0 +1,83 @@
+name: Update USC calendar
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'calendario-mdp-usc-2026-2027.ics'
+      - '.github/workflows/update-usc-calendar.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update-calendar:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Set Spain timezone, location and alerts
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          from zoneinfo import ZoneInfo
+          import re
+
+          path = Path('calendario-mdp-usc-2026-2027.ics')
+          text = path.read_text(encoding='utf-8')
+          blocks = re.findall(r'BEGIN:VEVENT\n(.*?)\nEND:VEVENT', text, flags=re.S)
+          madrid = ZoneInfo('Europe/Madrid')
+          stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+
+          out = [
+              'BEGIN:VCALENDAR',
+              'VERSION:2.0',
+              'PRODID:-//Anyeli Galva//USC MDP 2026-2027//ES',
+              'CALSCALE:GREGORIAN',
+              'METHOD:PUBLISH',
+              'X-WR-CALNAME:Máster Dirección de Proyectos USC 2026-2027',
+              'X-WR-TIMEZONE:Europe/Madrid',
+          ]
+
+          for block in blocks:
+              uid = re.search(r'UID:(.*)', block).group(1).strip()
+              start_raw = re.search(r'DTSTART:(\d{8}T\d{6})Z', block).group(1)
+              end_raw = re.search(r'DTEND:(\d{8}T\d{6})Z', block).group(1)
+              summary = re.search(r'SUMMARY:(.*)', block).group(1).strip()
+              start = datetime.strptime(start_raw, '%Y%m%dT%H%M%S').replace(tzinfo=timezone.utc).astimezone(madrid)
+              end = datetime.strptime(end_raw, '%Y%m%dT%H%M%S').replace(tzinfo=timezone.utc).astimezone(madrid)
+              out += [
+                  'BEGIN:VEVENT',
+                  f'UID:{uid}',
+                  f'DTSTAMP:{stamp}',
+                  f'DTSTART;TZID=Europe/Madrid:{start.strftime("%Y%m%dT%H%M%S")}',
+                  f'DTEND;TZID=Europe/Madrid:{end.strftime("%Y%m%dT%H%M%S")}',
+                  f'SUMMARY:{summary}',
+                  'LOCATION:USC - Campus de Lugo',
+                  'BEGIN:VALARM',
+                  'TRIGGER:-P1D',
+                  'ACTION:DISPLAY',
+                  'DESCRIPTION:Máster USC - recordatorio 1 día antes',
+                  'END:VALARM',
+                  'BEGIN:VALARM',
+                  'TRIGGER:-PT1H',
+                  'ACTION:DISPLAY',
+                  'DESCRIPTION:Máster USC - recordatorio 1 hora antes',
+                  'END:VALARM',
+                  'END:VEVENT',
+              ]
+
+          out.append('END:VCALENDAR')
+          path.write_text('\n'.join(out) + '\n', encoding='utf-8')
+          PY
+      - name: Commit calendar changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add calendario-mdp-usc-2026-2027.ics
+          git diff --cached --quiet || git commit -m 'Fix USC calendar Spain timezone alerts and location'
+          git push
