@@ -14,10 +14,38 @@ jobs:
         with:
           python-version: '3.12'
       - run: python generate_mdp_calendar.py
+      - name: Format calendar for Lugo local time, classroom and alerts
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          from zoneinfo import ZoneInfo
+          import re
+          path = Path('calendario-mdp-usc-2026-2027.ics')
+          text = path.read_text(encoding='utf-8')
+          blocks = re.findall(r'BEGIN:VEVENT\n(.*?)\nEND:VEVENT', text, flags=re.S)
+          madrid = ZoneInfo('Europe/Madrid')
+          stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+          out = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Anyeli Galva//USC MDP 2026-2027//ES','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:Máster Dirección de Proyectos USC 2026-2027']
+          for block in blocks:
+              uid = re.search(r'UID:(.*)', block).group(1).strip()
+              start_raw = re.search(r'DTSTART:(\d{8}T\d{6})Z', block).group(1)
+              end_raw = re.search(r'DTEND:(\d{8}T\d{6})Z', block).group(1)
+              summary = re.search(r'SUMMARY:(.*)', block).group(1).strip()
+              old_location = re.search(r'LOCATION:(.*)', block)
+              aula = old_location.group(1).strip() if old_location else 'Aula por confirmar'
+              location = aula if aula.startswith('USC - Campus de Lugo - ') else 'USC - Campus de Lugo - ' + aula
+              start = datetime.strptime(start_raw, '%Y%m%dT%H%M%S').replace(tzinfo=timezone.utc).astimezone(madrid)
+              end = datetime.strptime(end_raw, '%Y%m%dT%H%M%S').replace(tzinfo=timezone.utc).astimezone(madrid)
+              out += ['BEGIN:VEVENT',f'UID:{uid}',f'DTSTAMP:{stamp}',f'DTSTART:{start.strftime("%Y%m%dT%H%M%S")}',f'DTEND:{end.strftime("%Y%m%dT%H%M%S")}',f'SUMMARY:{summary}',f'LOCATION:{location}','BEGIN:VALARM','TRIGGER:-P1D','ACTION:DISPLAY','DESCRIPTION:Máster USC - 1 día antes','END:VALARM','BEGIN:VALARM','TRIGGER:-PT1H','ACTION:DISPLAY','DESCRIPTION:Máster USC - 1 hora antes','END:VALARM','END:VEVENT']
+          out.append('END:VCALENDAR')
+          path.write_text('\n'.join(out) + '\n', encoding='utf-8')
+          print(f'Formatted {len(blocks)} individual events')
+          PY
       - name: Commit calendar
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add calendario-mdp-usc-2026-2027.ics
-          git diff --cached --quiet || git commit -m 'Generate full USC MDP calendar'
+          git diff --cached --quiet || git commit -m 'Generate USC MDP calendar with Lugo schedule and classrooms'
           git push
