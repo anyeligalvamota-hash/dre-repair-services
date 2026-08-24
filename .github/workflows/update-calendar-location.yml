@@ -2,8 +2,6 @@ name: Update USC calendar locations
 
 on:
   push:
-    paths:
-      - 'calendario-mdp-usc-lugo-2026-2027.ics'
 
 permissions:
   contents: write
