@@ -26,23 +26,13 @@ jobs:
           from datetime import datetime, timezone
           from zoneinfo import ZoneInfo
           import re
-
+          # Trigger refresh of the subscribed calendar.
           path = Path('calendario-mdp-usc-2026-2027.ics')
           text = path.read_text(encoding='utf-8')
           blocks = re.findall(r'BEGIN:VEVENT\n(.*?)\nEND:VEVENT', text, flags=re.S)
           madrid = ZoneInfo('Europe/Madrid')
           stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
-
-          out = [
-              'BEGIN:VCALENDAR',
-              'VERSION:2.0',
-              'PRODID:-//Anyeli Galva//USC MDP 2026-2027//ES',
-              'CALSCALE:GREGORIAN',
-              'METHOD:PUBLISH',
-              'X-WR-CALNAME:Máster Dirección de Proyectos USC 2026-2027',
-              'X-WR-TIMEZONE:Europe/Madrid',
-          ]
-
+          out = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Anyeli Galva//USC MDP 2026-2027//ES','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:Máster Dirección de Proyectos USC 2026-2027','X-WR-TIMEZONE:Europe/Madrid']
           for block in blocks:
               uid = re.search(r'UID:(.*)', block).group(1).strip()
               start_raw = re.search(r'DTSTART:(\d{8}T\d{6})Z', block).group(1)
@@ -50,27 +40,7 @@ jobs:
               summary = re.search(r'SUMMARY:(.*)', block).group(1).strip()
               start = datetime.strptime(start_raw, '%Y%m%dT%H%M%S').replace(tzinfo=timezone.utc).astimezone(madrid)
               end = datetime.strptime(end_raw, '%Y%m%dT%H%M%S').replace(tzinfo=timezone.utc).astimezone(madrid)
-              out += [
-                  'BEGIN:VEVENT',
-                  f'UID:{uid}',
-                  f'DTSTAMP:{stamp}',
-                  f'DTSTART;TZID=Europe/Madrid:{start.strftime("%Y%m%dT%H%M%S")}',
-                  f'DTEND;TZID=Europe/Madrid:{end.strftime("%Y%m%dT%H%M%S")}',
-                  f'SUMMARY:{summary}',
-                  'LOCATION:USC - Campus de Lugo',
-                  'BEGIN:VALARM',
-                  'TRIGGER:-P1D',
-                  'ACTION:DISPLAY',
-                  'DESCRIPTION:Máster USC - recordatorio 1 día antes',
-                  'END:VALARM',
-                  'BEGIN:VALARM',
-                  'TRIGGER:-PT1H',
-                  'ACTION:DISPLAY',
-                  'DESCRIPTION:Máster USC - recordatorio 1 hora antes',
-                  'END:VALARM',
-                  'END:VEVENT',
-              ]
-
+              out += ['BEGIN:VEVENT',f'UID:{uid}',f'DTSTAMP:{stamp}',f'DTSTART;TZID=Europe/Madrid:{start.strftime("%Y%m%dT%H%M%S")}',f'DTEND;TZID=Europe/Madrid:{end.strftime("%Y%m%dT%H%M%S")}',f'SUMMARY:{summary}','LOCATION:USC - Campus de Lugo','BEGIN:VALARM','TRIGGER:-P1D','ACTION:DISPLAY','DESCRIPTION:Máster USC - recordatorio 1 día antes','END:VALARM','BEGIN:VALARM','TRIGGER:-PT1H','ACTION:DISPLAY','DESCRIPTION:Máster USC - recordatorio 1 hora antes','END:VALARM','END:VEVENT']
           out.append('END:VCALENDAR')
           path.write_text('\n'.join(out) + '\n', encoding='utf-8')
           PY
