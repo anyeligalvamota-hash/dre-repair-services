@@ -82,18 +82,18 @@ P4032204|2027-04-22|16:00-18:00|Sostenibilidad en dirección de proy. (examen)|A
 def esc(s):
     return str(s).replace('\\','\\\\').replace(';','\\;').replace(',','\\,').replace('\n','\\n')
 
-def utc_stamp(date_s, time_s):
-    from zoneinfo import ZoneInfo
-    d=datetime.fromisoformat(date_s).date()
-    h,m=map(int,time_s.split(':'))
-    return datetime(d.year,d.month,d.day,h,m,tzinfo=ZoneInfo('Europe/Madrid')).astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
-
-lines=['BEGIN:VCALENDAR','PRODID:-//Anyeli Galva//USC MDP 2026-2027//ES','VERSION:2.0','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:Máster Dirección de Proyectos USC 2026-2027','X-WR-TIMEZONE:Europe/Madrid']
-for i,r in enumerate(rows):
+lines=['BEGIN:VCALENDAR','PRODID:-//Anyeli Galva//USC MDP 2026-2027//ES','VERSION:2.0','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:Máster Dirección de Proyectos USC 2026-2027','X-WR-TIMEZONE:Europe/Madrid',
+'BEGIN:VTIMEZONE','TZID:Europe/Madrid','X-LIC-LOCATION:Europe/Madrid',
+'BEGIN:DAYLIGHT','TZOFFSETFROM:+0100','TZOFFSETTO:+0200','TZNAME:CEST','DTSTART:19700329T020000','RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU','END:DAYLIGHT',
+'BEGIN:STANDARD','TZOFFSETFROM:+0200','TZOFFSETTO:+0100','TZNAME:CET','DTSTART:19701025T030000','RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU','END:STANDARD','END:VTIMEZONE']
+for r in rows:
     code,date_s,tm,title,room=r.split('|')
     a,b=tm.split('-')
     uid=str(uuid.uuid5(uuid.NAMESPACE_URL,f'{code}-{date_s}-{tm}'))+'@usc-mdp'
-    lines += ['BEGIN:VEVENT',f'UID:{uid}',f'DTSTAMP:{datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")}',f'DTSTART:{utc_stamp(date_s,a)}',f'DTEND:{utc_stamp(date_s,b)}',f'SUMMARY:{esc(title)}',f'LOCATION:{esc(room)}',f'DESCRIPTION:Código: {code}', 'BEGIN:VALARM','TRIGGER:-PT30M','ACTION:DISPLAY','DESCRIPTION:Clase del Máster USC','END:VALARM','END:VEVENT']
+    stamp=datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+    start=a.replace(':','')+'00'
+    end=b.replace(':','')+'00'
+    lines += ['BEGIN:VEVENT',f'UID:{uid}',f'DTSTAMP:{stamp}',f'DTSTART;TZID=Europe/Madrid:{date_s.replace("-","")}T{start}',f'DTEND;TZID=Europe/Madrid:{date_s.replace("-","")}T{end}',f'SUMMARY:{esc(title)}',f'LOCATION:{esc("USC - Campus de Lugo - " + room)}',f'DESCRIPTION:Código: {code}','BEGIN:VALARM','TRIGGER:-P1D','ACTION:DISPLAY','DESCRIPTION:Máster USC - 1 día antes','END:VALARM','BEGIN:VALARM','TRIGGER:-PT1H','ACTION:DISPLAY','DESCRIPTION:Máster USC - 1 hora antes','END:VALARM','END:VEVENT']
 lines.append('END:VCALENDAR')
 Path('calendario-mdp-usc-2026-2027.ics').write_text('\n'.join(lines)+'\n',encoding='utf-8')
 print(f'Generated {len(rows)} events')
