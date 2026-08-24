@@ -1,0 +1,16 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Anyeli Galva//USC MDP 2026-2027//ES
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Máster Dirección de Proyectos USC 2026-2027
+X-WR-TIMEZONE:Europe/Madrid
+BEGIN:VEVENT
+UID:mdp-usc-calendar@anyeligalvamota-hash.github.io
+DTSTAMP:20260824T140000Z
+DTSTART:20260910T140000Z
+DTEND:20260910T183000Z
+SUMMARY:Máster Dirección de Proyectos USC - Calendario académico
+DESCRIPTION:Calendario académico del Máster Universitario en Dirección de Proyectos 2026/2027. Para la versión completa con todas las sesiones consulta el archivo descargable.
+END:VEVENT
+END:VCALENDAR
