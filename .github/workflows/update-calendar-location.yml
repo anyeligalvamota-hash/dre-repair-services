@@ -1,4 +1,4 @@
-name: Update USC calendar locations
+name: Create USC calendar with classrooms
 
 on:
   push:
@@ -7,34 +7,32 @@ permissions:
   contents: write
 
 jobs:
-  update-location:
-    if: ${{ !contains(github.event.head_commit.message, 'Update USC calendar locations') }}
+  create-classroom-feed:
+    if: ${{ !contains(github.event.head_commit.message, 'Create USC calendar with classrooms') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add classroom to LOCATION
+      - name: Create classroom feed
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
-          p=Path('calendario-mdp-usc-lugo-2026-2027.ics')
-          s=p.read_text(encoding='utf-8')
+          src=Path('calendario-mdp-usc-lugo-2026-2027.ics')
+          dst=Path('calendario-mdp-usc-lugo-2026-2027-aulas.ics')
+          s=src.read_text(encoding='utf-8')
           def fix(m):
               block=m.group(1)
-              if re.search(r'^LOCATION:USC - Campus de Lugo - ', block, re.M):
-                  return 'BEGIN:VEVENT\n'+block+'\nEND:VEVENT'
-              aula=re.search(r'^DESCRIPTION:.*?Aula académica: ([^\\r\\n]+)', block, re.M)
-              if not aula:
-                  return 'BEGIN:VEVENT\n'+block+'\nEND:VEVENT'
-              block=re.sub(r'^LOCATION:USC - Campus de Lugo.*$', 'LOCATION:USC - Campus de Lugo - '+aula.group(1), block, flags=re.M)
+              aula=re.search(r'Aula académica: ([^\\r\\n]+)', block)
+              if aula:
+                  block=re.sub(r'^LOCATION:.*$', 'LOCATION:USC - Campus de Lugo - '+aula.group(1), block, flags=re.M)
               return 'BEGIN:VEVENT\n'+block+'\nEND:VEVENT'
           s=re.sub(r'BEGIN:VEVENT\n(.*?)\nEND:VEVENT', fix, s, flags=re.S)
-          p.write_text(s,encoding='utf-8')
+          dst.write_text(s,encoding='utf-8')
           PY
-      - name: Commit update
+      - name: Commit classroom feed
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add calendario-mdp-usc-lugo-2026-2027.ics
-          git diff --cached --quiet || git commit -m 'Update USC calendar locations'
+          git add calendario-mdp-usc-lugo-2026-2027-aulas.ics
+          git diff --cached --quiet || git commit -m 'Create USC calendar with classrooms'
           git push
